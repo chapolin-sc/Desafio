@@ -5,6 +5,7 @@ using Desafio.Client.Pages;
 using Desafio.Components;
 using Desafio.Components.Account;
 using Desafio.Data;
+using Desafio.Client.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,11 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
+
+builder.Services.AddHttpClient<ICityRepository, CityRepository>(client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5079/api/City/");
+});
 
 builder.Services.AddAuthentication(options =>
     {

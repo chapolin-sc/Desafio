@@ -1,0 +1,6 @@
+@Desafio.Api_HostAddress = http://localhost:5079
+
+GET {{Desafio.Api_HostAddress}}/api/City
+Accept: application/json
+
+###

@@ -1,0 +1,160 @@
+@page "/"
+@page "/cidades"
+@attribute [StreamRendering(true)]
+@rendermode InteractiveAuto
+
+@attribute [Authorize]
+
+@inject ICityRepository _cityRepo;
+@inject IJSRuntime JS
+
+<PageTitle>Cidades</PageTitle>
+
+<h2>Lista de Cidades</h2>
+<br />
+
+<a class="btn btn-primary my-3" href="/cadastro">Cadstrar</a>
+
+@if(cidades == null)
+{
+    <em><p>Carregando ...</p></em>
+}
+else
+{
+    <div>
+        
+        <QuickGrid Items="@FilteredCitys" Class="table" Pagination="@pagination">
+            <PropertyColumn Property="@(p => p.Id)" Title="Id" Sortable="true">
+                <ColumnOptions>
+                    <div class="search-box">
+                        <!-- <i class="bi bi-search"></i> -->
+                        <input type="search" class="form-control" @bind="idFilter" @bind:event="oninput" placeholder="Número do Id" /> 
+                    </div>
+                </ColumnOptions>
+            </PropertyColumn>
+            <PropertyColumn Property="@(p => p.City)" Title="Cidade" Sortable="true">
+                <ColumnOptions>
+                    <div class="search-box">
+                        <!-- <i class="bi bi-search"></i> -->
+                        <input type="search" class="form-control" @bind="cityFilter" @bind:event="oninput" placeholder="Nome da Cidade" /> 
+                    </div>
+                </ColumnOptions>
+            </PropertyColumn>
+            <PropertyColumn Property="@(p => p.State)" Title="Estado" Sortable="true">
+                <ColumnOptions>
+                    <div class="search-box">
+                        <!-- <i class="bi bi-search"></i> -->
+                        <input type="search" class="form-control" @bind="stateFilter" @bind:event="oninput" placeholder="Sigla do Estado" /> 
+                    </div>
+                </ColumnOptions>
+            </PropertyColumn>
+            <TemplateColumn Title="Ações" Align="Align.Center" class="align-middle">
+                <div class="flex items-center fs-4">
+                    <a href="/editar/@context.Id"><i class="bi bi-pencil link-primary"></i></a> |
+                    <a @onclick="()=>OnShowModalClick(context)">
+                        <i class="bi bi-trash link-danger"></i>
+                    </a>
+                </div>
+            </TemplateColumn>
+        </QuickGrid>
+
+        <Paginator State="@pagination" />
+
+        <!-- Modal -->
+        <div class="modal fade" id="IdModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="exampleModalLabel">Exclusão</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>Deseja excluir a cidade: </p>
+                        <span class="fw-bolder">@contextCity?.City</span>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" @onclick="()=>DeleteCity(contextCity?.Id ?? 0)">Excluir</button>
+                        <button type="button" class="btn btn-secondary" @onclick="()=>OnShowModalClick()">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    window.AlternarModal = () => {
+        const modal = document.getElementById("IdModal")
+        const InstanceModal = bootstrap.Modal.getOrCreateInstance(modal)
+        InstanceModal.toggle()
+    }
+
+</script>
+
+@code {
+    [SupplyParameterFromForm]
+    private IQueryable<CityModel>? cidades { get; set; }
+    private CityModel? contextCity { get; set; } = null!;
+    private string idFilter;
+    private string cityFilter;
+    private string stateFilter;
+
+    
+
+    PaginationState pagination = new PaginationState()
+    {
+        ItemsPerPage = 30
+    };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var cid = await _cityRepo.GetAll();        
+        cidades = cid.AsQueryable();
+    }
+
+
+    IQueryable<CityModel> FilteredCitys
+    {
+        get
+        {
+            IEnumerable<CityModel>? result = cidades?.ToList();
+
+            if (!string.IsNullOrEmpty(idFilter))
+            {
+                result = result.Where(c => c.Id.ToString().Contains(idFilter, StringComparison.CurrentCultureIgnoreCase));
+            }
+
+            if (!string.IsNullOrEmpty(cityFilter))
+            {
+                result = result.Where(c => c.City.Contains(cityFilter, StringComparison.CurrentCultureIgnoreCase));
+            }
+
+            if (!string.IsNullOrEmpty(stateFilter))
+            {
+                result = result.Where(c => c.State.Contains(stateFilter, StringComparison.CurrentCultureIgnoreCase));
+            }
+
+            
+
+            return result.AsQueryable();
+        }
+    }
+
+
+    private async Task OnShowModalClick(Object city = null)
+    {
+        if(city != null)
+            contextCity = (CityModel) city;
+
+        await JS.InvokeVoidAsync("AlternarModal");
+    }
+
+    private async Task DeleteCity(int id)
+    {
+        await _cityRepo.DeleteCity(id);
+        await JS.InvokeVoidAsync("AlternarModal");
+        await JS.InvokeVoidAsync("location.reload");
+    }
+
+}

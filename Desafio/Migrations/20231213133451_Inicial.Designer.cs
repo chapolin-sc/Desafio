@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Desafio.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20231213131614_InicialMySql")]
-    partial class InicialMySql
+    [Migration("20231213133451_Inicial")]
+    partial class Inicial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -1,0 +1,73 @@
+@page "/editar/{id:int}"
+@rendermode InteractiveWebAssembly
+@inject NavigationManager navegation
+
+@attribute [Authorize]
+
+<PageTitle>Cadastro de Cidades</PageTitle>
+
+<h2>Edição de Cidades</h2>
+<br />
+
+<EditForm Model="@city" OnValidSubmit="@Submit" FormName="Cadastro" class="row row-cols-1">
+    <DataAnnotationsValidator />
+    <div class="w-100"></div>
+    <div class="col-6 fw-bolder mb-3">
+        <label class="form-label">Id</label>
+        <InputNumber class="form-control" @bind-Value="city.Id" disabled />
+        <ValidationMessage For="()=>city.Id"/>
+    </div>
+    <div class="w-100"></div>
+    <div class="col-6 fw-bolder mb-3">
+        <label class="form-label">Cidade</label>
+        <InputText class="form-control" @bind-Value="city.City" />
+        <ValidationMessage For="()=>city.City"/>
+    </div>
+    <div class="w-100"></div>
+    <div class="col-6 fw-bolder mb-3">
+        <label class="form-label">Estado</label>
+        <InputText class="form-control" @bind-Value="city.State" />
+        <ValidationMessage For="()=>city.State"/>
+    </div>
+    <div class="w-100"></div>
+    <div class="col-6 align-self-start">
+        <button class="btn btn-primary mt-3" type="submit">
+           <!--<span class="spinner-border spinner-border-sm" ></span>-->
+            Salvar
+        </button>
+        <NavLink class="btn btn-secondary mt-3" href="/cidades">
+            Cancelar
+        </NavLink>
+    </div>
+</EditForm>
+
+
+@code {
+    [SupplyParameterFromForm]
+    private CityModel? city { get; set; }
+
+    [Inject]
+    private ICityRepository repository { get; set; }
+
+    [Parameter]
+    public int id { get; set; } = 0;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        city ??= new();
+        
+        if(id != null || id != 0)
+        {
+            city = await repository.GetForId(id);
+        }
+        Console.WriteLine(city.City);
+       
+    }
+
+    private async Task Submit(EditContext context)
+    {
+        await repository.UpCity(id, city);
+        navegation.NavigateTo("/cidades");
+    }
+}
